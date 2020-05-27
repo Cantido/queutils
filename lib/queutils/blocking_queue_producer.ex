@@ -30,11 +30,20 @@ defmodule Queutils.BlockingQueueProducer do
 
   ## Options
 
-    - `:name` - the ID of the queue. This will be the first argument to the `push/2` function. Default is `BlockingProducer`.
+    - `:name` - the ID of the queue. This will be the first argument to the `push/2` function. Default is `BlockingQueueProducer`.
     - `:max_length` - The maximum number of messages that this process will store until it starts blocking. Default is 1,000.
     - `:dispatcher` - The `GenStage` dispatcher that this producer should use. Default is `GenStage.DemandDispatcher`.
   """
 
+  @doc """
+  Start a blocking queue producer.
+
+  ## Options
+
+    - `:name` - the ID of the queue. This will be the first argument to the `push/2` function. Default is `BlockingQueueProducer`.
+    - `:max_length` - The maximum number of messages that this process will store until it starts blocking. Default is 1,000.
+    - `:dispatcher` - The `GenStage` dispatcher that this producer should use. Default is `GenStage.DemandDispatcher`.
+  """
   def start_link(opts) do
     name = Keyword.get(opts, :name, BlockingQueueProducer)
     GenStage.start_link(__MODULE__, opts, name: name)

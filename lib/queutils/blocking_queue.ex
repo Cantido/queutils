@@ -33,6 +33,14 @@ defmodule Queutils.BlockingQueue do
     - `:max_length` - The maximum number of messages that this process will store until it starts blocking. Default is 1,000.
   """
 
+  @doc """
+  Start a blocking queue process.
+
+  ## Options
+
+    - `:name` - the ID of the queue. This will be the first argument to the `push/2` function. Default is `BlockingQueue`.
+    - `:max_length` - The maximum number of messages that this process will store until it starts blocking. Default is 1,000.
+  """
   def start_link(opts) do
     name = Keyword.get(opts, :name)
     GenServer.start_link(__MODULE__, opts, name: name)
@@ -51,14 +59,25 @@ defmodule Queutils.BlockingQueue do
     {:ok, %{max_length: max_length, queue: [], waiting: []}}
   end
 
+  @doc """
+  Push an item onto the queue.
+  This function will block if the queue is full, and unblock once it's not.
+  """
   def push(queue, msg) do
     GenServer.call(queue, {:push, msg})
   end
 
-  def pop(queue, count) do
+  @doc """
+  Pop an item off of the queue. Never blocks, and returns a list.
+  The returned list will be empty if the queue is empty.
+  """
+  def pop(queue, count \\ 1) do
     GenServer.call(queue, {:pop, count})
   end
 
+  @doc """
+  Get the current length of the queue.
+  """
   def length(queue) do
     GenServer.call(queue, :length)
   end
