@@ -2,11 +2,11 @@ defmodule Queutils.BlockingQueue do
   use GenServer
 
   @moduledoc """
-  A queue with a fixed length that blocks on `pop/1` if the queue is full.
+  A queue with a fixed length that blocks on `Queutils.BlockingQueue.push/2` if the queue is full.
 
   ## Usage
 
-  Add it to your application supervisor's `start/2` function, after the queue it pulls from, like this:
+  Add it to your application supervisor's `start/2` function, like this:
 
       def start(_type, _args) do
         children = [
@@ -23,6 +23,9 @@ defmodule Queutils.BlockingQueue do
 
       :ok = Queutils.Blockingqueue.push(MessageQueue, :my_message)
       [:my_message] = Queutils.Blockingqueue.pop(MessageQueue, 1)
+
+  Use with `Queutils.BlockingQueueProducer` for more fun,
+  or use `Queutils.BlockingProducer` for the effect of both.
 
   ## Options
 
