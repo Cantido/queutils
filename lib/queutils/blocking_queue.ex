@@ -63,6 +63,7 @@ defmodule Queutils.BlockingQueue do
   Push an item onto the queue.
   This function will block if the queue is full, and unblock once it's not.
   """
+  @spec push(any(), any()) :: :ok
   def push(queue, msg) do
     GenServer.call(queue, {:push, msg})
   end
@@ -71,6 +72,7 @@ defmodule Queutils.BlockingQueue do
   Pop an item off of the queue. Never blocks, and returns a list.
   The returned list will be empty if the queue is empty.
   """
+  @spec pop(term(), non_neg_integer()) :: list()
   def pop(queue, count \\ 1) do
     GenServer.call(queue, {:pop, count})
   end
@@ -78,6 +80,7 @@ defmodule Queutils.BlockingQueue do
   @doc """
   Get the current length of the queue.
   """
+  @spec length(term()) :: non_neg_integer()
   def length(queue) do
     GenServer.call(queue, :length)
   end

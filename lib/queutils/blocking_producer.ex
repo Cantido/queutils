@@ -58,11 +58,12 @@ defmodule Queutils.BlockingProducer do
       type: :supervisor
     }
   end
-  
+
   @doc """
   Push an item onto the queue.
   This function will block if the queue is full, and unblock once it's not.
   """
+  @spec push(term(), term()) :: :ok
   def push(queue, msg) do
     GenStage.call(queue, {:push, msg})
   end
