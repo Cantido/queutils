@@ -10,7 +10,7 @@ by adding `queutils` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:queutils, "~> 1.1.0"}
+    {:queutils, "~> 1.2.0"}
   ]
 end
 ```
