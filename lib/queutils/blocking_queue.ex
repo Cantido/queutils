@@ -56,7 +56,7 @@ defmodule Queutils.BlockingQueue do
 
   def init(opts) do
     max_length = Keyword.get(opts, :max_length, 1_000)
-    {:ok, %{max_length: max_length, queue: [], waiting: []}}
+    {:ok, %{max_length: max_length, queue: [], waiting: [], pushed_count: 0, popped_count: 0}}
   end
 
   @doc """
@@ -69,12 +69,28 @@ defmodule Queutils.BlockingQueue do
   end
 
   @doc """
+  Get the count of elements that have been pushed to a queue over the queue's lifetime.
+  """
+  @spec pushed_count(any()) :: integer()
+  def pushed_count(queue) do
+    GenServer.call(queue, :pushed_count)
+  end
+
+  @doc """
   Pop an item off of the queue. Never blocks, and returns a list.
   The returned list will be empty if the queue is empty.
   """
   @spec pop(term(), non_neg_integer()) :: list()
   def pop(queue, count \\ 1) do
     GenServer.call(queue, {:pop, count})
+  end
+
+  @doc """
+  Get the count of elements that have been popped from a queue over the queue's lifetime.
+  """
+  @spec popped_count(any()) :: integer()
+  def popped_count(queue) do
+    GenServer.call(queue, :popped_count)
   end
 
   @doc """
@@ -95,8 +111,12 @@ defmodule Queutils.BlockingQueue do
       {:noreply, %{state | waiting: waiting}}
     else
       queue = state.queue ++ [msg]
-      {:reply, :ok, %{state | queue: queue}}
+      {:reply, :ok, %{state | queue: queue, pushed_count: state.pushed_count + 1}}
     end
+  end
+
+  def handle_call(:pushed_count, _from, state) do
+    {:reply, state.pushed_count, state}
   end
 
   def handle_call({:pop, count}, _from, state) do
@@ -108,8 +128,13 @@ defmodule Queutils.BlockingQueue do
       msg
     end)
 
+    popped_count = state.popped_count + Kernel.length(popped)
     queue = remaining ++ msgs_from_waiters
 
-    {:reply, popped, %{state | queue: queue, waiting: still_waiting}}
+    {:reply, popped, %{state | queue: queue, waiting: still_waiting, popped_count: popped_count}}
+  end
+
+  def handle_call(:popped_count, _from, state) do
+    {:reply, state.popped_count, state}
   end
 end
