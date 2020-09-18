@@ -124,19 +124,19 @@ defmodule Queutils.BlockingProducer do
   end
 
   def handle_call(:length, _from, state) do
-    {:reply, Kernel.length(state.queue), state}
+    {:reply, Kernel.length(state.queue), [], state}
   end
 
   def handle_call(:waiting_count, _from, state) do
-    {:reply, Kernel.length(state.waiting), state}
+    {:reply, Kernel.length(state.waiting), [], state}
   end
 
   def handle_call(:pushed_count, _from, state) do
-    {:reply, state.pushed_count, state}
+    {:reply, state.pushed_count, [], state}
   end
 
   def handle_call(:popped_count, _from, state) do
-    {:reply, state.popped_count, state}
+    {:reply, state.popped_count, [], state}
   end
 
   @impl true
