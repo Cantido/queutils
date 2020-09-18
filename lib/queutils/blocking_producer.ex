@@ -68,6 +68,22 @@ defmodule Queutils.BlockingProducer do
     GenStage.call(queue, {:push, msg})
   end
 
+  def length(queue) do
+    GenStage.call(queue, :length)
+  end
+
+  def waiting_count(queue) do
+    GenStage.call(queue, :waiting_count)
+  end
+
+  def pushed_count(queue) do
+    GenStage.call(queue, :pushed_count)
+  end
+
+  def popped_count(queue) do
+    GenStage.call(queue, :popped_count)
+  end
+
   @impl true
   def init(opts) do
     dispatcher = Keyword.get(opts, :dispatcher, GenStage.DemandDispatcher)
@@ -75,7 +91,7 @@ defmodule Queutils.BlockingProducer do
     unless max_length >= 0 do
       raise "Invalid argument :max_length. Must be an integer zero or greater, but was #{inspect max_length}"
     end
-    {:producer, %{queue: [], waiting: [], demand: 0, max_length: max_length}, dispatcher: dispatcher}
+    {:producer, %{queue: [], waiting: [], demand: 0, max_length: max_length, pushed_count: 0, popped_count: 0}, dispatcher: dispatcher}
   end
 
   @impl true
@@ -84,14 +100,30 @@ defmodule Queutils.BlockingProducer do
     cond do
       state.demand > 0 ->
         remaining_demand = state.demand - 1
-        {:reply, :ok, [msg], %{state | demand: remaining_demand}}
+        {:reply, :ok, [msg], %{state | demand: remaining_demand, pushed_count: state.pushed_count + 1, popped_count: state.popped_count + 1}}
       Enum.count(state.queue) >= state.max_length ->
         waiting = state.waiting ++ [{from, msg}]
         {:noreply, [], %{state | waiting: waiting}}
       true ->
         queue = state.queue ++ [msg]
-        {:reply, :ok, [], %{state | queue: queue}}
+        {:reply, :ok, [], %{state | queue: queue, pushed_count: state.pushed_count + 1}}
     end
+  end
+
+  def handle_call(:length, _from, state) do
+    {:reply, Kernel.length(state.queue), state}
+  end
+
+  def handle_call(:waiting_count, _from, state) do
+    {:reply, Kernel.length(state.waiting), state}
+  end
+
+  def handle_call(:pushed_count, _from, state) do
+    {:reply, state.pushed_count, state}
+  end
+
+  def handle_call(:popped_count, _from, state) do
+    {:reply, state.popped_count, state}
   end
 
   @impl true
@@ -110,8 +142,10 @@ defmodule Queutils.BlockingProducer do
 
     queue = remaining ++ msgs_from_waiters
     remaining_demand = total_demand - Enum.count(queue)
+    new_pushes = Kernel.length(msgs_from_waiters)
+    new_pops = Kernel.length(popped)
 
-    {:noreply, popped, %{state | demand: remaining_demand, queue: queue, waiting: still_waiting}}
+    {:noreply, popped, %{state | demand: remaining_demand, queue: queue, waiting: still_waiting, pushed_count: state.pushed_count + new_pushes, popped_count: state.popped_count + new_pops}}
   end
 
   defp validate_state(state) do
@@ -126,6 +160,8 @@ defmodule Queutils.BlockingProducer do
         raise "Incorrect state: BlockingProducer has demand but also has items in its queue."
       state.demand > 0 && not Enum.empty?(state.waiting) ->
         raise "Incorrect state: BlockingProducer has demand but also has processes waiting to insert."
+      state.pushed_count < state.popped_count ->
+        raise "Incorrect state: pushed_count is less than popped_count (pushed: #{state.pushed_count}, popped: #{state.popped_count})"
       true -> :ok
     end
   end
