@@ -68,18 +68,31 @@ defmodule Queutils.BlockingProducer do
     GenStage.call(queue, {:push, msg})
   end
 
+  @doc """
+  Get the number of items currently sitting in a queue.
+  """
   def length(queue) do
     GenStage.call(queue, :length)
   end
 
+  @doc """
+  Get the number of blocked processes waiting to push to a queue.
+  """
   def waiting_count(queue) do
     GenStage.call(queue, :waiting_count)
   end
 
+  @doc """
+  Get the total count of messages that have been pushed to a queue over its lifetime.
+  """
   def pushed_count(queue) do
     GenStage.call(queue, :pushed_count)
   end
 
+
+  @doc """
+  Get the total count of messages that have been popped from a queue over its lifetime.
+  """
   def popped_count(queue) do
     GenStage.call(queue, :popped_count)
   end
