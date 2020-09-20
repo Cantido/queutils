@@ -58,4 +58,21 @@ defmodule Queutils.BlockingQueueTest do
     _ = BQ.pop(queue, 2)
     assert BQ.popped_count(queue) == 1
   end
+
+  test "two queues can exist without conflicts" do
+    BQ.start_link(name: MyFirstQueue)
+    BQ.start_link(name: MySecondQueue)
+
+    first_ref = make_ref()
+    second_ref = make_ref()
+
+    BQ.push(MyFirstQueue, first_ref)
+    BQ.push(MySecondQueue, second_ref)
+
+    [first_actual] = BQ.pop(MyFirstQueue)
+    [second_actual] = BQ.pop(MySecondQueue)
+
+    assert first_actual == first_ref
+    assert second_actual == second_ref
+  end
 end
