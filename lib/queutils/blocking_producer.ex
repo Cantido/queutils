@@ -27,7 +27,15 @@ defmodule Queutils.BlockingProducer do
         Supervisor.start_link(children, opts)
       end
 
-  Then, you can push messages to the queue like this:
+  Then, subscribe a `GenStage` to it.
+
+  ```elixir
+  def init(:ok) do
+    {:consumer, :the_state_does_not_matter, subscribe_to: [MessageProducer]}
+  end
+      ```
+
+  You can now push messages to the queue like this:
 
       :ok = Queutils.BlockingProducer.push(MessageProducer, :my_message)
 
