@@ -13,7 +13,7 @@ defmodule Queutils.MixProject do
       homepage_url: "https://github.com/cantido/queutils",
       package: [
         maintainers: ["Rosa Richter"],
-        licenses: ["GPL-3.0-or-later"],
+        licenses: ["MIT"],
         links: %{"GitHub" => "https://github.com/cantido/queutils"},
       ],
       docs: [
