@@ -121,14 +121,16 @@ defmodule Queutils.BlockingQueue do
 
   def handle_call({:pop, count}, _from, state) do
     {popped, remaining} = Enum.split(state.queue, count)
-    {popped_waiters, still_waiting} = Enum.split(state.waiting, count)
+    actual_count = Enum.count(popped)
+
+    {popped_waiters, still_waiting} = Enum.split(state.waiting, actual_count)
 
     msgs_from_waiters = Enum.map(popped_waiters, fn {from, msg} ->
       GenServer.reply(from, :ok)
       msg
     end)
 
-    popped_count = state.popped_count + Kernel.length(popped)
+    popped_count = state.popped_count + actual_count
     queue = remaining ++ msgs_from_waiters
 
     {:reply, popped, %{state | queue: queue, waiting: still_waiting, popped_count: popped_count}}
